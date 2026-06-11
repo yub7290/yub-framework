@@ -29,11 +29,23 @@ public class SecurityConfig {
     private final JwtAuthenticationTokenFilter jwtFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
+    /**
+     * 密码编码器（BCrypt）
+     *
+     * @return PasswordEncoder
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * 安全过滤链配置：无状态Session、禁用CSRF、公开/auth路径、JWT过滤器
+     *
+     * @param http HttpSecurity
+     * @return SecurityFilterChain
+     * @throws Exception 配置异常
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http

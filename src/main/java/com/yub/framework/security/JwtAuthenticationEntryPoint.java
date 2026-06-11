@@ -3,6 +3,7 @@ package com.yub.framework.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yub.common.enums.ResponseCode;
 import com.yub.common.model.Response;
+import com.yub.framework.util.JsonUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
@@ -24,6 +25,9 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
+    /**
+     * 认证失败处理：返回 401 JSON 错误响应
+     */
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
@@ -31,7 +35,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         Response<Void> result = Response.error(ResponseCode.UNAUTHORIZED);
-        ObjectMapper mapper = new ObjectMapper();
-        response.getWriter().write(mapper.writeValueAsString(result));
+        response.getWriter().write(JsonUtils.toJson(result));
     }
 }

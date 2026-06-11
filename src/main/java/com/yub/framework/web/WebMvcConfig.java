@@ -15,6 +15,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
+    /**
+     * 全局跨域配置：允许所有来源、常用HTTP方法、携带Cookie
+     */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")

@@ -1,11 +1,16 @@
 package com.yub.framework.security;
 
+import com.yub.common.constant.RedisKeyConstants;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,32 +28,47 @@ import java.io.IOException;
  * @Description: 从请求头提取 JWT Token 并认证
  * @Version: 1.0.0
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
     private final UserDetailsService userDetailsService;
+    private final RedissonClient redissonClient;
 
+    /**
+     * 过滤请求：提取Token → 检查黑名单（轻量）→ 解析并验证（仅一次）→ 设置SecurityContext
+     */
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        String token = extractToken(request);
-        if (StringUtils.isNotBlank(token) && jwtProvider.validateToken(token)) {
-            String userId = jwtProvider.getUserId(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        String token = jwtProvider.getToken(request);
+        if (StringUtils.isNotBlank(token)) {
+            if (isBlacklisted(token)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            Claims claims = jwtProvider.parseTokenIfValid(token);
+            if (claims != null) {
+                try {
+                    String userId = claims.getSubject();
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } catch (Exception e) {
+                    log.debug("JWT认证失败: {}", e.getMessage());
+                    SecurityContextHolder.clearContext();
+                }
+            }
         }
         filterChain.doFilter(request, response);
     }
 
-    private String extractToken(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (StringUtils.isNotBlank(header) && header.startsWith("Bearer ")) {
-            return header.substring(7);
-        }
-        return null;
+    private boolean isBlacklisted(String token) {
+        RBucket<String> bucket = redissonClient.getBucket(RedisKeyConstants.TOKEN_BLACKLIST_PREFIX + token);
+        return bucket.isExists();
     }
 }
