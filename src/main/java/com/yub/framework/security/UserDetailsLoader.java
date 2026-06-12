@@ -10,7 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
  * @Description: 用户详情加载器接口
  * @Version: 1.0.0
  */
-public interface SysUserDetailsLoader {
+public interface UserDetailsLoader {
 
     /**
      * 根据用户ID加载用户详情

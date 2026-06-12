@@ -1,4 +1,4 @@
-package com.yub.framework.util;
+package com.yub.framework.redis;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

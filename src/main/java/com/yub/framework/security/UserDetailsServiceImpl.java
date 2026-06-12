@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final SysUserDetailsLoader userDetailsLoader;
+    private final UserDetailsLoader userDetailsLoader;
 
     /**
      * 根据用户ID加载Spring Security用户详情

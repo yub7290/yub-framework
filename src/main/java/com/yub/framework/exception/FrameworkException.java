@@ -1,6 +1,7 @@
 package com.yub.framework.exception;
 
 import com.yub.common.exception.BaseException;
+import com.yub.common.exception.ErrorCode;
 
 /**
  * 系统框架异常
@@ -11,11 +12,19 @@ import com.yub.common.exception.BaseException;
  * @Version: 1.0
  */
 public class FrameworkException extends BaseException {
-    public FrameworkException(FrameworkErrorCode errorCode) {
+    public FrameworkException(ErrorCode errorCode) {
         super(errorCode);
     }
 
-    public FrameworkException(FrameworkErrorCode errorCode, Throwable cause) {
+    public FrameworkException(ErrorCode errorCode, Throwable cause) {
         super(errorCode, cause);
+    }
+
+    public FrameworkException(ErrorCode errorCode, Object... args) {
+        super(errorCode, args);
+    }
+
+    public FrameworkException(Throwable cause, ErrorCode errorCode, Object... args) {
+        super(cause, errorCode, args);
     }
 }
