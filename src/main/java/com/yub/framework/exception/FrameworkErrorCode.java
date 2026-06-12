@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 public enum FrameworkErrorCode implements ErrorCode {
     JSON_PARSE_ERROR(1000001, "JSON解析错误"),
     BEAN_COPY_ERROR(1000002, "Bean拷贝错误：%s -> %s"),
+    UNAUTHORIZED(1000003, "未授权"),
     ;
 
     private final int code;

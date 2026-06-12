@@ -41,6 +41,9 @@ public class SecurityConfig {
 
     /**
      * 安全过滤链配置：无状态Session、禁用CSRF、公开/auth路径、JWT过滤器
+     * <p>
+     * 注意：/auth/refresh/** 使用通配符以匹配 /auth/refresh/{refreshToken} 路径参数，
+     * 因为该接口无需 AccessToken 认证（使用 RefreshToken 换取新令牌）。
      *
      * @param http HttpSecurity
      * @return SecurityFilterChain
@@ -55,7 +58,7 @@ public class SecurityConfig {
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/login", "/auth/captcha", "/auth/refresh").permitAll()
+                .requestMatchers("/auth/login", "/auth/captcha", "/auth/refresh/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

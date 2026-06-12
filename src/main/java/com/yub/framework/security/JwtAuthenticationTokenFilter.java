@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
@@ -68,7 +69,8 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     }
 
     private boolean isBlacklisted(String token) {
-        RBucket<String> bucket = redissonClient.getBucket(RedisKeyConstants.TOKEN_BLACKLIST_PREFIX + token);
+        String tokenHash = DigestUtils.sha256Hex(token);
+        RBucket<String> bucket = redissonClient.getBucket(RedisKeyConstants.TOKEN_BLACKLIST_PREFIX + tokenHash);
         return bucket.isExists();
     }
 }
