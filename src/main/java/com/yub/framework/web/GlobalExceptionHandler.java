@@ -51,6 +51,9 @@ public class GlobalExceptionHandler {
 
     /**
      * 捕获认证失败异常（如 JWT 过期、无效 Token），返回 401 未授权
+     * <p>注意：在无状态 JWT 架构中，认证异常由过滤器链内的
+     * JwtAuthenticationEntryPoint 直接处理，不会传播到此处理器。
+     * 保留以防未来架构变更。
      *
      * @param e AuthenticationException
      * @return 401 错误响应

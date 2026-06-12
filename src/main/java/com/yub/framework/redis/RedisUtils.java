@@ -287,15 +287,15 @@ public class RedisUtils {
     }
 
     /**
-     * 解锁
+     * 解锁（需与 lock(key) 配对使用）
+     * <p>注意：Redisson 的 lock/unlock 必须是同一 RLock 实例操作。
+     * 推荐优先使用 runWithLock(key, task) 避免配对问题。
      *
      * @param key 锁的标识
      */
     public static void unlock(String key) {
         RLock lock = redissonClient.getLock(key);
-        if (lock.isHeldByCurrentThread()) {
-            lock.unlock();
-        }
+        lock.unlock();
     }
 
     /**
@@ -311,6 +311,27 @@ public class RedisUtils {
             task.run();
         } finally {
             lock.unlock();
+        }
+    }
+
+    // ==================== 原子读取+删除 ====================
+
+    /**
+     * 原子读取并删除缓存（GETDEL 语义）
+     * <p>用于消除 TOCTOU 竞争条件，如验证码校验场景。
+     *
+     * @param key 缓存键
+     * @return Optional 包装的缓存值
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> Optional<T> getAndDelete(String key) {
+        Objects.requireNonNull(key, "redis key 不能为 null");
+        try {
+            RBucket<T> bucket = (RBucket<T>) redissonClient.getBucket(key);
+            return Optional.ofNullable(bucket.getAndDelete());
+        } catch (Exception e) {
+            log.error("Redis getAndDelete failed, key={}", key, e);
+            return Optional.empty();
         }
     }
 
