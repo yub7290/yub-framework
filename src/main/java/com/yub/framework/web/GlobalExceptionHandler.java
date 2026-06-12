@@ -6,6 +6,7 @@ import com.yub.common.model.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -46,6 +47,18 @@ public class GlobalExceptionHandler {
     public Response<Void> handleAccessDeniedException(AccessDeniedException e) {
         log.warn("权限异常: {}", e.getMessage());
         return Response.error(ResponseCode.FORBIDDEN);
+    }
+
+    /**
+     * 捕获认证失败异常（如 JWT 过期、无效 Token），返回 401 未授权
+     *
+     * @param e AuthenticationException
+     * @return 401 错误响应
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public Response<Void> handleAuthenticationException(AuthenticationException e) {
+        log.warn("认证失败: {}", e.getMessage());
+        return Response.error(ResponseCode.UNAUTHORIZED);
     }
 
     /**

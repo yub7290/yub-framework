@@ -1,6 +1,7 @@
 package com.yub.framework.security;
 
 import com.yub.common.constant.RedisKeyConstants;
+import com.yub.framework.redis.RedisUtils;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,8 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.redisson.api.RBucket;
-import org.redisson.api.RedissonClient;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -36,7 +35,6 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
     private final UserDetailsService userDetailsService;
-    private final RedissonClient redissonClient;
 
     /**
      * 过滤请求：提取Token → 检查黑名单（轻量）→ 解析并验证（仅一次）→ 设置SecurityContext
@@ -70,7 +68,6 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     private boolean isBlacklisted(String token) {
         String tokenHash = DigestUtils.sha256Hex(token);
-        RBucket<String> bucket = redissonClient.getBucket(RedisKeyConstants.TOKEN_BLACKLIST_PREFIX + tokenHash);
-        return bucket.isExists();
+        return RedisUtils.exists(RedisKeyConstants.TOKEN_BLACKLIST_PREFIX + tokenHash);
     }
 }

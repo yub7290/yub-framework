@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
+import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
 
@@ -198,6 +199,119 @@ public class RedisUtils {
      */
     public static long decrement(String key, long delta) {
         return increment(key, -delta);
+    }
+
+    // ==================== Set 集合操作 ====================
+
+    /**
+     * 向 Set 中添加元素
+     */
+    public static <T> void addToSet(String key, T value) {
+        Objects.requireNonNull(key, "redis key 不能为 null");
+        try {
+            redissonClient.getSet(key).add(value);
+        } catch (Exception e) {
+            log.error("Redis addToSet failed, key={}", key, e);
+        }
+    }
+
+    /**
+     * 检查 Set 中是否包含某元素
+     */
+    public static <T> boolean setContains(String key, T value) {
+        Objects.requireNonNull(key, "redis key 不能为 null");
+        try {
+            return redissonClient.getSet(key).contains(value);
+        } catch (Exception e) {
+            log.error("Redis setContains failed, key={}", key, e);
+            return false;
+        }
+    }
+
+    /**
+     * 从 Set 中移除元素
+     */
+    public static <T> void removeFromSet(String key, T value) {
+        Objects.requireNonNull(key, "redis key 不能为 null");
+        try {
+            redissonClient.getSet(key).remove(value);
+        } catch (Exception e) {
+            log.error("Redis removeFromSet failed, key={}", key, e);
+        }
+    }
+
+    /**
+     * 删除 Set 集合
+     */
+    public static void deleteSet(String key) {
+        Objects.requireNonNull(key, "redis key 不能为 null");
+        try {
+            redissonClient.getSet(key).delete();
+        } catch (Exception e) {
+            log.error("Redis deleteSet failed, key={}", key, e);
+        }
+    }
+
+    /**
+     * 设置 Set 的过期时间
+     */
+    public static void expireSet(String key, Duration duration) {
+        Objects.requireNonNull(key, "redis key 不能为 null");
+        try {
+            redissonClient.getSet(key).expire(duration);
+        } catch (Exception e) {
+            log.error("Redis expireSet failed, key={}", key, e);
+        }
+    }
+
+    // ==================== 分布式锁 ====================
+
+    /**
+     * 获取分布式锁
+     *
+     * @param key 锁的标识
+     * @return RLock 实例
+     */
+    public static RLock getLock(String key) {
+        Objects.requireNonNull(key, "lock key 不能为 null");
+        return redissonClient.getLock(key);
+    }
+
+    /**
+     * 加锁（阻塞等待）
+     *
+     * @param key 锁的标识
+     */
+    public static void lock(String key) {
+        redissonClient.getLock(key).lock();
+    }
+
+    /**
+     * 解锁
+     *
+     * @param key 锁的标识
+     */
+    public static void unlock(String key) {
+        RLock lock = redissonClient.getLock(key);
+        if (lock.isHeldByCurrentThread()) {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * 使用锁执行任务
+     *
+     * @param key  锁的标识
+     * @param task 需要加锁执行的任务
+     */
+    public static void runWithLock(String key, Runnable task) {
+        RLock lock = redissonClient.getLock(key);
+        lock.lock();
+        try {
+            task.run();
+        } finally {
+            lock.unlock();
+        }
     }
 
     // ==================== 条件写入 ====================

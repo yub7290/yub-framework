@@ -16,4 +16,11 @@ public interface UserDetailsLoader {
      * 根据用户ID加载用户详情
      */
     UserDetails loadByUserId(Long userId);
+
+    /**
+     * 清除指定用户的角色缓存
+     *
+     * @param userId 用户ID
+     */
+    void evictRoleCache(Long userId);
 }
