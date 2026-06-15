@@ -211,18 +211,30 @@ public class RedisUtils {
         try {
             redissonClient.getSet(key).add(value);
         } catch (Exception e) {
+            if (isWrongTypeError(e)) {
+                log.warn("Redis key 类型异常，自动清理后重试: key={}", key);
+                redissonClient.getBucket(key).delete();
+                redissonClient.getSet(key).add(value);
+                return;
+            }
             log.error("Redis addToSet failed, key={}", key, e);
         }
     }
 
     /**
      * 检查 Set 中是否包含某元素
+     * <p>当 Redis 中该键存在但类型不是 Set 时，自动删除该键并返回 false，避免 WRONGTYPE 持续报错。</p>
      */
     public static <T> boolean setContains(String key, T value) {
         Objects.requireNonNull(key, "redis key 不能为 null");
         try {
             return redissonClient.getSet(key).contains(value);
         } catch (Exception e) {
+            if (e.getMessage() != null && e.getMessage().contains("WRONGTYPE")) {
+                log.warn("Redis key 类型异常，自动清理后重试: key={}", key);
+                redissonClient.getBucket(key).delete();
+                return false;
+            }
             log.error("Redis setContains failed, key={}", key, e);
             return false;
         }
@@ -236,6 +248,11 @@ public class RedisUtils {
         try {
             redissonClient.getSet(key).remove(value);
         } catch (Exception e) {
+            if (isWrongTypeError(e)) {
+                log.warn("Redis key 类型异常，自动清理: key={}", key);
+                redissonClient.getBucket(key).delete();
+                return;
+            }
             log.error("Redis removeFromSet failed, key={}", key, e);
         }
     }
@@ -248,6 +265,11 @@ public class RedisUtils {
         try {
             redissonClient.getSet(key).delete();
         } catch (Exception e) {
+            if (isWrongTypeError(e)) {
+                log.warn("Redis key 类型异常，尝试直接删除: key={}", key);
+                redissonClient.getBucket(key).delete();
+                return;
+            }
             log.error("Redis deleteSet failed, key={}", key, e);
         }
     }
@@ -312,6 +334,16 @@ public class RedisUtils {
         } finally {
             lock.unlock();
         }
+    }
+
+    // ==================== 类型判断辅助 ====================
+
+    /**
+     * 判断异常是否由 WRONGTYPE 导致
+     */
+    private static boolean isWrongTypeError(Exception e) {
+        String msg = e.getMessage();
+        return msg != null && msg.contains("WRONGTYPE");
     }
 
     // ==================== 原子读取+删除 ====================
