@@ -59,7 +59,13 @@ public class SecurityConfig {
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/login", "/auth/captcha", "/auth/refresh/**").permitAll()
+                .requestMatchers(
+                        "/auth/login",
+                        "/auth/captcha",
+                        "/auth/refresh/**",
+                        "/student/auth/login",
+                        "/student/auth/captcha",
+                        "/student/auth/refresh/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
