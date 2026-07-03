@@ -65,7 +65,13 @@ public class SecurityConfig {
                         "/auth/refresh/**",
                         "/student/auth/login",
                         "/student/auth/captcha",
-                        "/student/auth/refresh/**").permitAll()
+                        "/student/auth/refresh/**",
+                        "/student/home/**",
+                        "/student/course/category",
+                        "/student/course/list",
+                        "/student/course/search",
+                        "/student/course/detail",
+                        "/student/chapter/list").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
