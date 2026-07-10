@@ -71,7 +71,7 @@ public class SecurityConfig {
                         "/student/course/list",
                         "/student/course/search",
                         "/student/course/detail",
-                        "/student/chapter/list").permitAll()
+                        "/student/chapter/list","/app/oauth/callback","/student/auth/oauth/callback","/student/auth/oauth/loginUrl","/pay/notify/**","/edu/upload/download","/teacher/auth/login","/teacher/auth/refresh/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
