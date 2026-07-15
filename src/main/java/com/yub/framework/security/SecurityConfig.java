@@ -79,7 +79,8 @@ public class SecurityConfig {
                         "/pay/notify/**",
                         "/edu/upload/download",
                         "/teacher/auth/login",
-                        "/teacher/auth/refresh/**").permitAll()
+                        "/teacher/auth/refresh/**",
+                        "/uploads/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
