@@ -5,6 +5,7 @@ import com.yub.framework.exception.FrameworkErrorCode;
 import com.yub.framework.exception.FrameworkException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 
 /**
  * @Author: bing.yu
@@ -13,6 +14,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
  * @Version: 1.1.0
  */
 public class SecurityUtils {
+
+    /** 公开展示接口允许匿名浏览；个人数据和写接口仍使用 getCurrentUserId。 */
+    public static Long getCurrentUserIdOrNull() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return null;
+        }
+        return getCurrentUserId();
+    }
 
     /**
      * 获取当前登录用户ID
